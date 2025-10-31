@@ -113,8 +113,14 @@ sendBtn.addEventListener('click', function(){
   inputBox.value = '';
 });
 
+pingTimerID = null;
+
 ws.onopen = () => {
   console.log('Connected to WebSocket server');
+  pingTimerID = setInterval(() => {
+    const timestamp = new Date().toISOString();
+    ws.send(JSON.stringify({type: "ping"}));
+  }, 1000);
 };
 
 ws.onmessage = async (event) => {
@@ -135,8 +141,14 @@ ws.onerror = (error) => {
 };
 
 ws.onclose = (event) => {
+  if (pingTimerID !== null){
+    clearInterval(pingTimerID);
+    pingTimerID = null;
+  }
+  
   if (!event.wasClean) {
     alert(`Disconnected from WebSocket server (code: ${event.code})`);
   }
+
   console.log('WebSocket closed', event);
 };
