@@ -151,7 +151,7 @@ fetch('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json')
                         if (typeof downloads[name] === 'object' && downloads[name].url){
                             if (notFirst) versionBox.appendChild(document.createElement('br'));
                             const downloadLink = document.createElement('a');
-                            downloadLink.className = 'link';
+                            downloadLink.className = 'versionLink';
                             downloadLink.href = downloads[name].url;
                             downloadLink.innerText = name.replace(/_|-/g, ' ').replace(/(^| )\w/g, s => s.toUpperCase());
                             versionBox.append(downloadLink);
