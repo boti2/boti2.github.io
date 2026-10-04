@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MC Downloader</title>
+        <style>
+            html {
+                margin: 0;
+                user-select: none;
+            }
+            body {
+                margin: 0;
+                background-color: #141420;
+                font-family: system-ui;
+                color: #fff;
+            }
+            .page {
+                display: flex;
+                flex-direction: column;
+                margin: 32px;
+                border: 2px solid #aaa;
+                padding: 16px;
+                border-radius: 16px;
+                box-sizing: border-box;
+                width: calc(100vw - 64px);
+                height: calc(100vh - 64px);
+                background-color: #202030;
+                font-size: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .list {
+                flex: 0 1 auto;
+                margin-top: 32px;
+                border: 2px solid #aaa;
+                padding: 8px;
+                border-radius: 12px;
+                box-sizing: border-box;
+                width: calc(100% - 0);
+                max-height: 100%;
+                font-size: 18px;
+                overflow: auto;
+            }
+            *::-webkit-scrollbar {
+                width: 14px;
+            }
+            *::-webkit-scrollbar-track {
+                background: #112;
+                background-clip: padding-box;
+                border-width: 4px 4px 4px 0;
+                border: solid transparent;
+                border-radius: 20px;
+            }
+            *::-webkit-scrollbar-thumb {
+                background: #555;
+                border-radius: 20px;
+                border-width: 6px 6px 6px 2px;
+                border: solid transparent;
+                background-clip: padding-box;
+            }
+            .version {
+                margin-left: 17px;
+                font-size: 18px;
+            }
+            .versionNotDoneIndicator {
+                margin-left: 16px;
+                font-size: 16px;
+            }
+            .versionLink {
+                margin-left: 16px;
+                font-size: 16px;
+                color: #CCF;
+            }
+            .link:visited {
+                color: #CCF;
+            }
+            #notice {
+                display: flex;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 32px;
+                font-size: 15px;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <h1 style="margin-top: 0">Minecraft Downloader</h1>
+            Tool to download official Minecraft client and server JARs easily.
+            <div class="list">
+                <details id="release-list">
+                    <summary>Release</summary>
+                </details>
+                <details id="snapshot-list">
+                    <summary>Snapshot</summary>
+                </details>
+                <details id="beta-list">
+                    <summary>Beta</summary>
+                </details>
+                <details id="alpha-list">
+                    <summary>Alpha</summary>
+                </details>
+                <details id="prealpha-list">
+                    <summary>Pre-Alpha</summary>
+                </details>
+            </div>
+        </div>
+        <div id="notice">I made this, it is not affiliated with Mojang Studios or Microsoft</div>
+        <script>
+const releaseList = document.getElementById('release-list');
+const snapshotList = document.getElementById('snapshot-list');
+const betaList = document.getElementById('beta-list');
+const alphaList = document.getElementById('alpha-list');
+const prealphaList = document.getElementById('prealpha-list');
+
+fetch('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json')
+   .then(response => response.json())
+   .then(manifest => {
+        manifest.versions.forEach(versionEntry => {
+            const version = versionEntry.id, type = versionEntry.type;
+            let list;
+            if (type === 'release') list = releaseList;
+            else if (type === 'snapshot') list = snapshotList;
+            else if (type === 'old_beta') list = betaList;
+            else if (type === 'old_alpha'){
+                if (/^a\d+(\.\d+)+/.test(version)) list = alphaList;
+                else list = prealphaList;
+            } else console.log(`Unknown version type: ${type}`);
+
+            const versionBox = document.createElement('details');
+            versionBox.className = 'version';
+            const summary = document.createElement('summary');
+            summary.innerText = version;
+            versionBox.appendChild(summary);
+            const notDoneIndicator = document.createElement('span');
+            notDoneIndicator.className = 'versionNotDoneIndicator';
+            notDoneIndicator.innerText = 'Loading...';
+            versionBox.appendChild(notDoneIndicator);
+            list.appendChild(versionBox);
+            
+            fetch(versionEntry.url)
+                .then(response => response.json())
+                .then(versionManifest => {
+                    const downloads = versionManifest.downloads;
+                    let notFirst = false;
+                    for (const name in downloads){
+                        if (typeof downloads[name] === 'object' && downloads[name].url){
+                            if (notFirst) versionBox.appendChild(document.createElement('br'));
+                            const downloadLink = document.createElement('a');
+                            downloadLink.className = 'link';
+                            downloadLink.href = downloads[name].url;
+                            downloadLink.innerText = name.replace(/_|-/g, ' ').replace(/(^| )\w/g, s => s.toUpperCase());
+                            versionBox.append(downloadLink);
+                            notFirst = true;
+                        }
+                    }
+                    notDoneIndicator.remove();
+                });
+
+        });
+   });
+        </script>
+    </body>
+</html>
